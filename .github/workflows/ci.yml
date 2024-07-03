@@ -1,36 +1,61 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
+
     services:
       docker:
         image: docker:19.03.12
         options: --privileged
-        ports:
-          - 2375:2375
-        env:
-          DOCKER_TLS_CERTDIR: ''
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
-          
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
+      - name: Build Docker image for testing
         run: docker build -t larsmagnusgithub/react-test -f ./client/Dockerfile.dev ./client
 
       - name: Run tests
-        run: docker run -e CI=true larsmagnusgithub/react-test npm test
+        run: docker run -e CI=true larsmagnusgithub/react-test npm test -- --coverage
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build multi-client image
+        run: docker build -t larsmagnusgithub/multi-client ./client
+
+      - name: Build multi-nginx image
+        run: docker build -t larsmagnusgithub/multi-nginx ./nginx
+
+      - name: Build multi-server image
+        run: docker build -t larsmagnusgithub/multi-server ./server
+
+      - name: Build multi-worker image
+        run: docker build -t larsmagnusgithub/multi-worker ./worker
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_ID }}" --password-stdin
+
+      - name: Push multi-client image
+        run: docker push larsmagnusgithub/multi-client
+
+      - name: Push multi-nginx image
+        run: docker push larsmagnusgithub/multi-nginx
+
+      - name: Push multi-server image
+        run: docker push larsmagnusgithub/multi-server
+
+      - name: Push multi-worker image
+        run: docker push larsmagnusgithub/multi-worker
+        
