@@ -46,9 +46,9 @@ jobs:
         run: docker build -t larsmagnusgithub/multi-worker ./worker
 
       - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ env.DOCKER_ID }}" --password-stdin
+        run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ vars.DOCKER_ID }}" --password-stdin
         env:
-          DOCKER_ID: ${{ env.DOCKER_ID }}
+          DOCKER_ID: ${{ vars.DOCKER_ID }}
           DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       - name: Push multi-client image
