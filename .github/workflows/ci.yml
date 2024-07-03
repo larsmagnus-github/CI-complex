@@ -26,6 +26,7 @@ jobs:
 
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: Docker
     needs: build-and-test
 
     steps:
@@ -46,6 +47,9 @@ jobs:
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_ID }}" --password-stdin
+        env:
+          DOCKER_ID: ${{ secrets.DOCKER_ID }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push multi-client image
         run: docker push larsmagnusgithub/multi-client
@@ -58,4 +62,3 @@ jobs:
 
       - name: Push multi-worker image
         run: docker push larsmagnusgithub/multi-worker
-        
